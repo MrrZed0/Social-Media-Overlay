@@ -1,0 +1,1316 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Social Overlay Customizer</title>
+<style>
+:root{
+  --bg:#15131c; --panel:#1e1b28; --panel2:#262233; --line:#332d45;
+  --ink:#ece9f5; --ink2:#9e97b8; --accent:#7c5cff; --accent2:#ff4d8d;
+  --ok:#3ddc97;
+  --ui:"Inter","Segoe UI",system-ui,-apple-system,sans-serif;
+  --num:"Consolas","SF Mono",ui-monospace,monospace;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--ui);font-size:14px}
+button,input,select,textarea{font-family:inherit;font-size:inherit;color:inherit}
+
+.app{display:grid;grid-template-columns:400px 1fr;height:100vh}
+@media (max-width:900px){.app{grid-template-columns:1fr;height:auto}}
+
+/* ---------- panel ---------- */
+.panel{background:var(--panel);border-right:1px solid var(--line);overflow-y:auto}
+.panel::-webkit-scrollbar{width:10px}
+.panel::-webkit-scrollbar-thumb{background:#3a3350;border-radius:6px}
+.brand{padding:18px 20px 14px;border-bottom:1px solid var(--line);position:sticky;top:0;background:var(--panel);z-index:5}
+.brand h1{margin:0;font-size:17px;font-weight:800;letter-spacing:-.02em}
+.brand p{margin:4px 0 0;color:var(--ink2);font-size:12px}
+.sec{border-bottom:1px solid var(--line)}
+.sec>summary{cursor:pointer;padding:13px 20px;font-weight:700;list-style:none;display:flex;align-items:center;gap:9px;user-select:none}
+.sec>summary::-webkit-details-marker{display:none}
+.sec>summary::before{content:"";width:6px;height:6px;border-right:2px solid var(--accent);border-bottom:2px solid var(--accent);transform:rotate(-45deg);transition:transform .15s}
+.sec[open]>summary::before{transform:rotate(45deg)}
+.sec>summary small{margin-left:auto;color:var(--ink2);font-weight:500;font-family:var(--num);font-size:11px}
+.body{padding:4px 20px 20px}
+
+.row{display:flex;align-items:center;gap:10px;margin:10px 0}
+.row>label{flex:0 0 108px;color:var(--ink2);font-size:12px}
+.row>*:not(label){flex:1;min-width:0}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+
+input[type=text],input[type=number],select,textarea{background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:8px 10px;width:100%}
+input[type=text]:focus,select:focus,textarea:focus{outline:2px solid var(--accent);outline-offset:1px}
+input[type=range]{width:100%;accent-color:var(--accent);background:none;border:0;padding:0}
+input[type=color]{width:38px;height:32px;padding:2px;background:var(--panel2);border:1px solid var(--line);border-radius:8px;flex:0 0 38px;cursor:pointer}
+.val{font-family:var(--num);font-size:11px;color:var(--ink2);flex:0 0 46px;text-align:right}
+
+.btn{background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:9px 12px;cursor:pointer;font-weight:600;transition:border-color .12s,background .12s}
+.btn:hover{border-color:var(--accent);background:#2d2740}
+.btn.primary{background:linear-gradient(180deg,var(--accent),#5e3fe0);border-color:#8f74ff;color:#fff}
+.btn.primary:hover{filter:brightness(1.08)}
+.btn.wide{width:100%}
+
+.chk{display:flex;align-items:center;gap:8px;cursor:pointer;padding:6px 0;font-size:13px}
+.chk input{accent-color:var(--accent);width:16px;height:16px}
+
+.hint{color:var(--ink2);font-size:11.5px;line-height:1.5;margin:10px 0 0}
+.drop{margin-top:10px;border:1.5px dashed #453d61;border-radius:12px;padding:18px 12px;text-align:center;cursor:pointer;transition:.15s}
+.drop:hover,.drop.over{border-color:var(--accent);background:#241f33}
+.drop b{display:block;font-size:13px}
+.drop small{display:block;color:var(--ink2);font-size:11px;margin-top:5px;line-height:1.45}
+.ihead .ic{width:20px;height:20px;display:grid;place-items:center;flex:0 0 20px;color:var(--ink2)}
+.ihead .ic svg,.ihead .ic img{width:100%;height:100%;object-fit:contain}
+.ihead .ic.has{color:var(--ok)}
+.hint code{background:#2a2438;padding:1px 5px;border-radius:4px;font-family:var(--num)}
+
+/* look picker */
+.looks{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px;max-height:360px;overflow-y:auto;padding-right:4px}
+.lookcard{background:#191622;border:1px solid var(--line);border-radius:10px;padding:10px 8px 8px;cursor:pointer;text-align:center;overflow:hidden}
+.lookcard:hover{border-color:var(--accent)}
+.lookcard.on{border-color:var(--accent2);box-shadow:0 0 0 1px var(--accent2) inset}
+.lookcard .mini{height:42px;display:grid;place-items:center;overflow:hidden}
+.lookcard b{display:block;font-size:10.5px;font-weight:600;color:var(--ink2);margin-top:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pals{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.pal{width:30px;height:30px;border-radius:8px;border:2px solid transparent;cursor:pointer;position:relative}
+.pal.on{border-color:#fff}
+
+/* link list */
+.items{margin-top:8px;display:flex;flex-direction:column;gap:6px;max-height:480px;overflow-y:auto;padding-right:4px}
+.item{background:#191622;border:1px solid var(--line);border-radius:10px}
+.item.on{border-color:#4a4068}
+.item.drag{opacity:.4}
+.ihead{display:flex;align-items:center;gap:8px;padding:8px 10px}
+.ihead .dot{width:12px;height:12px;border-radius:3px;flex:0 0 12px}
+.ihead .nm{flex:1;font-size:12.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ihead .hd{color:var(--ink2);font-size:11px;font-family:var(--num);white-space:nowrap;overflow:hidden;max-width:110px;text-overflow:ellipsis}
+.ihead .grip{cursor:grab;color:#5d5478;flex:0 0 auto;letter-spacing:-2px;font-size:14px}
+.ihead .exp{background:none;border:0;color:var(--ink2);cursor:pointer;padding:2px 4px}
+.idet{padding:0 10px 10px;display:none}
+.item.open .idet{display:block}
+.idet .row>label{flex:0 0 76px;font-size:11px}
+.filter{display:flex;gap:8px;margin-top:10px}
+
+/* ---------- stage ---------- */
+.stage{display:flex;flex-direction:column;min-width:0;background:
+  radial-gradient(900px 500px at 70% -10%,#241f35,transparent),var(--bg)}
+.bar{display:flex;align-items:center;gap:10px;padding:12px 18px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+.bar .sp{flex:1}
+.tag{font-family:var(--num);font-size:11px;color:var(--ink2);border:1px solid var(--line);padding:4px 8px;border-radius:999px}
+.pvwrap{flex:1;padding:24px;overflow:auto;display:grid;place-items:center;min-height:320px}
+#pv{width:100%;max-width:100%;min-height:200px;border-radius:12px;border:1px dashed #3b3450;display:flex;overflow:hidden;resize:both}
+#pv.checker{background-image:linear-gradient(45deg,#2a2438 25%,transparent 25%),linear-gradient(-45deg,#2a2438 25%,transparent 25%),linear-gradient(45deg,transparent 75%,#2a2438 75%),linear-gradient(-45deg,transparent 75%,#2a2438 75%);background-size:22px 22px;background-position:0 0,0 11px,11px -11px,-11px 0}
+.foot{padding:10px 18px;border-top:1px solid var(--line);color:var(--ink2);font-size:11.5px}
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(20px);background:#2a2438;border:1px solid var(--accent);padding:10px 18px;border-radius:999px;opacity:0;pointer-events:none;transition:.25s;font-weight:600}
+.toast.on{opacity:1;transform:translateX(-50%)}
+</style>
+</head>
+<body>
+<div class="app">
+
+<!-- ============ CONTROL PANEL ============ -->
+<aside class="panel">
+  <div class="brand">
+    <h1>Social Overlay Customizer</h1>
+    <p>Build it here → export a standalone <code style="font-family:var(--num)">overlay.html</code> for OBS.</p>
+  </div>
+
+  <!-- STYLE -->
+  <details class="sec" open>
+    <summary>Style <small id="styleCount"></small></summary>
+    <div class="body">
+      <div class="row"><label>Palette</label><div></div></div>
+      <div class="pals" id="pals"></div>
+      <label class="chk"><input type="checkbox" id="brandMode" checked> Use each platform's brand colour</label>
+      <div class="row"><label>Search looks</label><input type="text" id="lookSearch" placeholder="neon, sticker, glass…"></div>
+      <div class="looks" id="looks"></div>
+      <div class="row" style="margin-top:12px"><button class="btn wide" id="shuffle">🎲 Shuffle a random style</button></div>
+    </div>
+  </details>
+
+  <!-- TEXT -->
+  <details class="sec">
+    <summary>Text &amp; size</summary>
+    <div class="body">
+      <div class="row"><label>Font</label><select id="font"></select></div>
+      <div class="row"><label>Text size</label><input type="range" id="size" min="10" max="90" step="1"><span class="val" id="sizeV"></span></div>
+      <div class="row"><label>Gap</label><input type="range" id="gap" min="0" max="90" step="1"><span class="val" id="gapV"></span></div>
+      <div class="row"><label>Icon gap</label><input type="range" id="igap" min="0" max="30" step="1"><span class="val" id="igapV"></span></div>
+      <div class="row"><label>Letter space</label><input type="range" id="ls" min="-4" max="14" step="1"><span class="val" id="lsV"></span></div>
+      <div class="row"><label>Icon size</label><input type="range" id="isize" min="60" max="320" step="5"><span class="val" id="isizeV"></span></div>
+      <label class="chk"><input type="checkbox" id="upper"> UPPERCASE labels</label>
+      <label class="chk"><input type="checkbox" id="showLabel" checked> Show handle text</label>
+      <label class="chk"><input type="checkbox" id="showIcon" checked> Show icons</label>
+      <label class="chk"><input type="checkbox" id="atPrefix"> Force an @ in front of every handle</label>
+      <label class="chk"><input type="checkbox" id="links"> Make items clickable links (for link-in-bio pages)</label>
+    </div>
+  </details>
+
+  <!-- LAYOUT -->
+  <details class="sec">
+    <summary>Layout</summary>
+    <div class="body">
+      <div class="row"><label>Direction</label>
+        <select id="dir">
+          <option value="row">Horizontal row</option>
+          <option value="column">Vertical stack</option>
+        </select>
+      </div>
+      <div class="row"><label>Align</label>
+        <select id="align">
+          <option value="center">Centre of canvas</option>
+          <option value="flex-start">Top / left</option>
+          <option value="flex-end">Bottom / right</option>
+        </select>
+      </div>
+      <div class="row"><label>Justify</label>
+        <select id="justify">
+          <option value="center">Centre</option>
+          <option value="flex-start">Start</option>
+          <option value="flex-end">End</option>
+          <option value="space-between">Spread out</option>
+        </select>
+      </div>
+      <label class="chk"><input type="checkbox" id="wrapOn"> Allow wrapping to new lines</label>
+      <div class="row"><label>Canvas pad</label><input type="range" id="pad" min="0" max="120" step="2"><span class="val" id="padV"></span></div>
+      <div class="row"><label>Background</label>
+        <select id="bgMode">
+          <option value="transparent">Transparent (OBS)</option>
+          <option value="solid">Solid colour</option>
+          <option value="gradient">Gradient</option>
+        </select>
+        <input type="color" id="bgColor" value="#101014">
+      </div>
+      <div class="row"><label>Animation</label>
+        <select id="anim">
+          <option value="none">None</option>
+          <option value="pulse">Pulse</option>
+          <option value="float">Float / bob</option>
+          <option value="glow">Glow breathe</option>
+          <option value="tilt">Tilt wobble</option>
+          <option value="marquee">Marquee scroll</option>
+          <option value="cycle">Cycle one at a time</option>
+        </select>
+      </div>
+      <div class="row"><label>Anim speed</label><input type="range" id="speed" min="1" max="30" step="1"><span class="val" id="speedV"></span></div>
+    </div>
+  </details>
+
+  <!-- LOGO -->
+  <details class="sec">
+    <summary>Centre logo</summary>
+    <div class="body">
+      <label class="chk"><input type="checkbox" id="logoShow" checked> Show logo</label>
+      <div class="row"><label>File</label><input type="text" id="logoSrc" value="logo.png"></div>
+      <div class="row"><label>Position</label>
+        <select id="logoPos">
+          <option value="middle">Middle (splits the links)</option>
+          <option value="start">Before all links</option>
+          <option value="end">After all links</option>
+          <option value="above">Above the links</option>
+        </select>
+      </div>
+      <div class="row"><label>Split after</label><input type="range" id="split" min="0" max="20" step="1"><span class="val" id="splitV"></span></div>
+      <div class="row"><label>Size</label><input type="range" id="logoSize" min="30" max="500" step="5"><span class="val" id="logoSizeV"></span></div>
+      <div class="row"><label>Shape</label>
+        <select id="logoShape">
+          <option value="circle">Circle</option>
+          <option value="round">Rounded square</option>
+          <option value="square">Square</option>
+          <option value="none">No crop (as-is)</option>
+        </select>
+      </div>
+      <div class="row"><label>Backing</label><input type="color" id="logoBg" value="#000000">
+        <select id="logoBgOn"><option value="1">Show behind logo</option><option value="0">None (transparent)</option></select></div>
+      <div class="row"><label>Ring width</label><input type="range" id="logoRing" min="0" max="24" step="1"><span class="val" id="logoRingV"></span></div>
+      <div class="row"><label>Ring colour</label><input type="color" id="logoRingC" value="#ffffff"><div></div></div>
+      <div class="row"><label>Glow</label><input type="range" id="logoGlow" min="0" max="60" step="1"><span class="val" id="logoGlowV"></span></div>
+      <div class="row"><label>Glow colour</label><input type="color" id="logoGlowC" value="#7c5cff"><div></div></div>
+      <div class="row"><label>Spin</label>
+        <select id="logoSpin"><option value="none">None</option><option value="slow">Slow spin</option><option value="pulse">Pulse</option><option value="float">Float</option></select>
+      </div>
+      <p class="hint">Keep <code>logo.png</code> in the same folder as the exported HTML. Any filename works — type it above.</p>
+    </div>
+  </details>
+
+  <!-- LINKS -->
+  <details class="sec" open>
+    <summary>Links <small id="linkCount"></small></summary>
+    <div class="body">
+      <div class="filter">
+        <input type="text" id="search" placeholder="Search 70+ platforms…">
+        <button class="btn" id="onlyOn" title="Show only enabled">◉</button>
+      </div>
+      <div class="items" id="items"></div>
+      <div class="grid2" style="margin-top:10px">
+        <button class="btn" id="addCustom">+ Custom link</button>
+        <button class="btn" id="clearAll">Turn all off</button>
+      </div>
+      <p class="hint">Drag the <b>⠿</b> handle to reorder. Open a link to set its handle, colour, or its own logo file.</p>
+    </div>
+  </details>
+
+  <!-- ICONS -->
+  <details class="sec" open>
+    <summary>Icons <small id="iconCount"></small></summary>
+    <div class="body">
+      <div class="row"><label>Built-in</label>
+        <select id="iconMode">
+          <option value="glyph">Symbol set</option>
+          <option value="mono">Two-letter monogram</option>
+        </select>
+      </div>
+      <div class="drop" id="drop">
+        <b>Drop logo files here</b>
+        <small>SVG or PNG · matched by filename: twitch.svg, kick.png, youtube.svg…</small>
+      </div>
+      <div class="grid2" style="margin-top:8px">
+        <button class="btn" id="pickIcons">Choose files…</button>
+        <button class="btn" id="clearIcons">Clear loaded</button>
+      </div>
+      <input type="file" id="iconFiles" accept=".svg,.png,.jpg,.jpeg,.webp,image/*" multiple hidden>
+      <input type="file" id="oneIcon" accept=".svg,.png,.jpg,.jpeg,.webp,image/*" hidden>
+      <label class="chk"><input type="checkbox" id="tintSvg" checked> Recolour SVG logos to match the style</label>
+      <label class="chk"><input type="checkbox" id="iconTry"> Also look for an <code>icons/</code> folder beside the HTML</label>
+      <div class="row"><label>Folder</label><input type="text" id="iconDir" value="icons/"></div>
+      <p class="hint">Loaded logos are <b>embedded</b> in the exported file, so <code>overlay.html</code> stays a single self-contained file with no icons folder needed.</p>
+      <p class="hint">Download the official marks from each platform's own brand or press page, or from a brand-icon library such as Simple Icons, Font Awesome or Bootstrap Icons — their filenames already match the names above. Anything you don't load keeps the built-in symbol.</p>
+    </div>
+  </details>
+
+  <!-- EXPORT -->
+  <details class="sec" open>
+    <summary>Export</summary>
+    <div class="body">
+      <button class="btn primary wide" id="dlHtml">⬇ Download overlay.html</button>
+      <div class="grid2" style="margin-top:8px">
+        <button class="btn" id="copyHtml">Copy HTML</button>
+        <button class="btn" id="dlCfg">Save preset</button>
+      </div>
+      <div class="grid2" style="margin-top:8px">
+        <button class="btn" id="loadCfg">Load preset</button>
+        <button class="btn" id="reset">Reset all</button>
+      </div>
+      <input type="file" id="cfgFile" accept=".json" hidden>
+      <p class="hint"><b>In OBS:</b> add a Browser source → tick <i>Local file</i> → pick <code>overlay.html</code> → set width/height to match your preview size → tick <i>Shutdown source when not visible</i> off.</p>
+    </div>
+  </details>
+</aside>
+
+<!-- ============ STAGE ============ -->
+<main class="stage">
+  <div class="bar">
+    <span class="tag" id="nowStyle">—</span>
+    <span class="tag" id="dims">1920 × 200</span>
+    <span class="sp"></span>
+    <button class="btn" id="checkerBtn">Checkerboard</button>
+    <button class="btn" id="darkBtn">Dark</button>
+    <button class="btn" id="lightBtn">Light</button>
+  </div>
+  <div class="pvwrap"><div id="pv" class="checker"></div></div>
+  <div class="foot">Drag the bottom-right corner of the preview to test different source sizes. Links with no logo file loaded use the built-in symbol set.</div>
+</main>
+</div>
+<div class="toast" id="toast"></div>
+
+<style id="ovStyle"></style>
+<style id="lookStyle"></style>
+
+<script>
+/* ============================================================
+   PLATFORMS
+   id | name | brand colour | monogram | url prefix | handle hint
+============================================================ */
+const PLATFORMS = [
+ ["twitch","Twitch","#9146FF","TW","https://twitch.tv/"],
+ ["kick","Kick","#53FC18","K","https://kick.com/"],
+ ["youtube","YouTube","#FF0000","YT","https://youtube.com/@"],
+ ["tiktok","TikTok","#25F4EE","TT","https://tiktok.com/@"],
+ ["x","X (Twitter)","#ffffff","X","https://x.com/"],
+ ["facebook","Facebook","#1877F2","FB","https://facebook.com/"],
+ ["instagram","Instagram","#E1306C","IG","https://instagram.com/"],
+ ["discord","Discord","#5865F2","DC","https://discord.gg/"],
+ ["rumble","Rumble","#85C742","RU","https://rumble.com/c/"],
+ ["trovo","Trovo","#19D66B","TV","https://trovo.live/s/"],
+ ["bitview","BitView","#FF7A00","BV","https://bitview.net/user/"],
+ ["bitchute","BitChute","#EF4136","BC","https://bitchute.com/channel/"],
+ ["odysee","Odysee","#EF1970","OD","https://odysee.com/@"],
+ ["dlive","DLive","#FFD300","DL","https://dlive.tv/"],
+ ["dailymotion","Dailymotion","#0066DC","DM","https://dailymotion.com/"],
+ ["vimeo","Vimeo","#1AB7EA","VM","https://vimeo.com/"],
+ ["github","GitHub","#F0F6FC","GH","https://github.com/"],
+ ["gitlab","GitLab","#FC6D26","GL","https://gitlab.com/"],
+ ["steam","Steam","#66C0F4","ST","https://steamcommunity.com/id/"],
+ ["xbox","Xbox","#107C10","XB","https://account.xbox.com/profile?gamertag="],
+ ["playstation","PlayStation","#0070D1","PS","https://psnprofiles.com/"],
+ ["nintendo","Nintendo","#E60012","NS",""],
+ ["epicgames","Epic Games","#CCCCCC","EG",""],
+ ["battlenet","Battle.net","#0074E0","BN",""],
+ ["riot","Riot Games","#D13639","RG",""],
+ ["roblox","Roblox","#E2231A","RB","https://roblox.com/users/"],
+ ["minecraft","Minecraft","#5EA33A","MC",""],
+ ["gog","GOG","#86328A","GG",""],
+ ["itchio","itch.io","#FA5C5C","IT","https://itch.io/profile/"],
+ ["speedrun","Speedrun.com","#179C49","SR","https://speedrun.com/user/"],
+ ["medal","Medal.tv","#FFC600","MD","https://medal.tv/u/"],
+ ["reddit","Reddit","#FF4500","RD","https://reddit.com/u/"],
+ ["snapchat","Snapchat","#FFFC00","SC","https://snapchat.com/add/"],
+ ["threads","Threads","#F5F5F5","TH","https://threads.net/@"],
+ ["bluesky","Bluesky","#0085FF","BS","https://bsky.app/profile/"],
+ ["mastodon","Mastodon","#6364FF","MA","https://mastodon.social/@"],
+ ["telegram","Telegram","#26A5E4","TG","https://t.me/"],
+ ["whatsapp","WhatsApp","#25D366","WA","https://wa.me/"],
+ ["signal","Signal","#3A76F0","SG","https://signal.me/#p/"],
+ ["linkedin","LinkedIn","#0A66C2","LI","https://linkedin.com/in/"],
+ ["pinterest","Pinterest","#E60023","PI","https://pinterest.com/"],
+ ["tumblr","Tumblr","#5A7FA6","TU","https://tumblr.com/"],
+ ["vk","VK","#0077FF","VK","https://vk.com/"],
+ ["line","LINE","#06C755","LN",""],
+ ["kakao","KakaoTalk","#FEE500","KK",""],
+ ["locals","Locals","#1C64F2","LC",""],
+ ["substack","Substack","#FF6719","SB","https://substack.com/@"],
+ ["medium","Medium","#F2F2F2","ME","https://medium.com/@"],
+ ["devto","dev.to","#E8E8E8","DV","https://dev.to/"],
+ ["stackoverflow","Stack Overflow","#F48024","SO","https://stackoverflow.com/users/"],
+ ["codepen","CodePen","#EDEDED","CP","https://codepen.io/"],
+ ["soundcloud","SoundCloud","#FF5500","SN","https://soundcloud.com/"],
+ ["spotify","Spotify","#1DB954","SP","https://open.spotify.com/user/"],
+ ["applemusic","Apple Music","#FA243C","AM",""],
+ ["bandcamp","Bandcamp","#629AA9","BA",""],
+ ["patreon","Patreon","#FF424D","PA","https://patreon.com/"],
+ ["kofi","Ko-fi","#FF5E5B","KO","https://ko-fi.com/"],
+ ["bmac","Buy Me a Coffee","#FFDD00","BM","https://buymeacoffee.com/"],
+ ["throne","Throne","#8E44FF","TH2","https://throne.com/"],
+ ["fourthwall","Fourthwall","#DDDDDD","FW",""],
+ ["streamlabs","Streamlabs","#80F5D2","SL","https://streamlabs.com/"],
+ ["streamelements","StreamElements","#0D9CFF","SE",""],
+ ["gumroad","Gumroad","#FF90E8","GR",""],
+ ["etsy","Etsy","#F56400","ET","https://etsy.com/shop/"],
+ ["paypal","PayPal","#3B7BBF","PP","https://paypal.me/"],
+ ["cashapp","Cash App","#00D632","CA","https://cash.app/$"],
+ ["venmo","Venmo","#008CFF","VN","https://venmo.com/u/"],
+ ["dribbble","Dribbble","#EA4C89","DB",""],
+ ["behance","Behance","#1769FF","BH",""],
+ ["artstation","ArtStation","#13AFF0","AS",""],
+ ["deviantart","DeviantArt","#05CC47","DA",""],
+ ["flickr","Flickr","#FF0084","FK",""],
+ ["imgur","Imgur","#1BB76E","IR",""],
+ ["newgrounds","Newgrounds","#FFA500","NG",""],
+ ["email","Email","#EA4335","@","mailto:"],
+ ["website","Website","#00C2FF","WW","https://"],
+ ["merch","Merch Store","#FFB020","MS",""],
+ ["donate","Donate","#3DDC97","$",""]
+];
+const PMAP = Object.fromEntries(PLATFORMS.map(p=>[p[0],{id:p[0],name:p[1],color:p[2],mono:p[3],url:p[4]}]));
+
+/* ============================================================
+   BUILT-IN SYMBOL SET — generic category glyphs, not brand marks.
+   Drop real logo files in to replace any of them.
+============================================================ */
+const GLYPHS = {
+ play:'<path d="M9 5.4l9.6 6.6-9.6 6.6z" fill="currentColor" stroke-linejoin="round"/>',
+ live:'<circle cx="12" cy="12" r="2.6" fill="currentColor" stroke="none"/><path d="M7.4 7.4a6.5 6.5 0 000 9.2M16.6 7.4a6.5 6.5 0 010 9.2M4.3 4.3a10.9 10.9 0 000 15.4M19.7 4.3a10.9 10.9 0 010 15.4"/>',
+ tv:'<rect x="2.6" y="6.4" width="18.8" height="12.6" rx="2.4"/><path d="M8 3.4l4 3 4-3"/>',
+ camera:'<path d="M3 8.6a2 2 0 012-2h2.2l1.3-2.1h6.9l1.3 2.1H19a2 2 0 012 2V17a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><circle cx="12" cy="12.7" r="3.4"/>',
+ image:'<rect x="3" y="4.8" width="18" height="14.4" rx="2.2"/><circle cx="8.6" cy="10" r="1.5"/><path d="M4 17.4l4.6-4.6 3.4 3.4 3-3L20 17"/>',
+ chat:'<path d="M20.4 14.6a2.4 2.4 0 01-2.4 2.4H8.6L4 20.6V6.4A2.4 2.4 0 016.4 4h11.6a2.4 2.4 0 012.4 2.4z"/>',
+ send:'<path d="M20.6 3.6L3.8 10.2l6.4 2.6 2.6 6.4z" stroke-linejoin="round"/><path d="M10.2 12.8l10.4-9.2"/>',
+ users:'<circle cx="9.2" cy="8.8" r="3.2"/><path d="M3.6 19.2a5.6 5.6 0 0111.2 0"/><path d="M16.2 6.2a3.2 3.2 0 010 5.4M17.8 14.2a5.6 5.6 0 012.9 4.4"/>',
+ controller:'<path d="M7.4 8.6h9.2a4.6 4.6 0 014.5 5.5l-.5 2.6a2.7 2.7 0 01-4.9 1l-1.3-2.1H9.6l-1.3 2.1a2.7 2.7 0 01-4.9-1l-.5-2.6a4.6 4.6 0 014.5-5.5z"/><path d="M7.6 11.4v2.6M6.3 12.7h2.6M15.6 12h.01M17.6 14h.01"/>',
+ trophy:'<path d="M7.6 4h8.8v4.6a4.4 4.4 0 11-8.8 0z"/><path d="M7.6 5.6H5.2a2.6 2.6 0 002.6 2.8M16.4 5.6h2.4a2.6 2.6 0 01-2.6 2.8M12 13v3.4M8.8 20h6.4"/>',
+ cart:'<path d="M3 4.2h2.3l2.4 10.6h9.8l2.2-7.6H6.2"/><circle cx="9.6" cy="18.8" r="1.5"/><circle cx="17.4" cy="18.8" r="1.5"/>',
+ heart:'<path d="M12 20.2s-7.6-4.7-7.6-9.6A4.2 4.2 0 0112 8.3a4.2 4.2 0 017.6 2.3c0 4.9-7.6 9.6-7.6 9.6z"/>',
+ cup:'<path d="M4.8 8.2h11.4v5.8a4.2 4.2 0 01-4.2 4.2H9a4.2 4.2 0 01-4.2-4.2z"/><path d="M16.2 9.6h1.9a2.7 2.7 0 010 5.4h-1.9"/><path d="M7.4 5.6V3.8M10.6 5.6V3.8M13.8 5.6V3.8"/>',
+ card:'<rect x="2.6" y="5.4" width="18.8" height="13.2" rx="2.4"/><path d="M2.6 10.2h18.8"/><path d="M6.4 14.6h3.4"/>',
+ music:'<path d="M9.2 17.6V6.2l10-2v11.4"/><circle cx="6.8" cy="17.8" r="2.4"/><circle cx="16.8" cy="15.6" r="2.4"/>',
+ cloud:'<path d="M7.4 18.4h10.2a3.6 3.6 0 00.3-7.2 5.6 5.6 0 00-10.8-1.2 3.7 3.7 0 00.3 8.4z"/>',
+ mic:'<rect x="9.2" y="3.2" width="5.6" height="10.4" rx="2.8"/><path d="M5.6 11.6a6.4 6.4 0 0012.8 0M12 18v2.8M8.8 20.8h6.4"/>',
+ code:'<path d="M9.2 6.8L4 12l5.2 5.2M14.8 6.8L20 12l-5.2 5.2"/>',
+ globe:'<circle cx="12" cy="12" r="8.4"/><path d="M3.6 12h16.8M12 3.6c2.6 2.7 2.6 14.1 0 16.8M12 3.6c-2.6 2.7-2.6 14.1 0 16.8"/>',
+ mail:'<rect x="2.8" y="5.4" width="18.4" height="13.2" rx="2.2"/><path d="M3.6 7l8.4 6.2L20.4 7"/>',
+ pen:'<path d="M4 17.4L16.4 5a2.6 2.6 0 013.6 3.6L7.6 21H4z" stroke-linejoin="round"/><path d="M14.6 6.8l2.6 2.6"/>',
+ brush:'<path d="M12 3.6a8.4 8.4 0 000 16.8c1.4 0 2.1-.9 2.1-1.9 0-1.6-1.6-1.8-1.6-3.2 0-1 .8-1.8 1.9-1.8h1.8a4.2 4.2 0 004.2-4.2c0-3.6-3.8-5.7-8.4-5.7z"/><circle cx="8.2" cy="10" r=".9" fill="currentColor" stroke="none"/><circle cx="12" cy="7.6" r=".9" fill="currentColor" stroke="none"/><circle cx="15.8" cy="10" r=".9" fill="currentColor" stroke="none"/>',
+ book:'<path d="M4.4 4.6h5.2A2.4 2.4 0 0112 7v12a2 2 0 00-2-2H4.4z"/><path d="M19.6 4.6h-5.2A2.4 2.4 0 0012 7v12a2 2 0 012-2h5.6z"/>',
+ link:'<path d="M10.2 14a4.2 4.2 0 005.9 0l3-3a4.2 4.2 0 00-5.9-5.9l-1.3 1.3"/><path d="M13.8 10a4.2 4.2 0 00-5.9 0l-3 3a4.2 4.2 0 005.9 5.9l1.3-1.3"/>',
+ star:'<path d="M12 3.8l2.6 5.4 5.9.8-4.3 4.1 1 5.9-5.2-2.8-5.2 2.8 1-5.9L3.5 10l5.9-.8z" stroke-linejoin="round"/>',
+ pin:'<path d="M12 21s6.4-6.3 6.4-10.4a6.4 6.4 0 10-12.8 0C5.6 14.7 12 21 12 21z"/><circle cx="12" cy="10.4" r="2.4"/>',
+ flame:'<path d="M12 21c3.6 0 6-2.4 6-5.6 0-4.4-4.4-5.2-3.6-11.4-3 1.2-5 4-5 7 0 .9-.7 1.4-1.3 1-1-.6-1.5-1.8-1.5-3C5 11 6 12.5 6 15.4 6 18.6 8.4 21 12 21z"/>',
+ box:'<path d="M3.4 7.8L12 3.6l8.6 4.2v8.4L12 20.4l-8.6-4.2z" stroke-linejoin="round"/><path d="M3.4 7.8L12 12l8.6-4.2M12 12v8.4"/>',
+ shield:'<path d="M12 3.4l7 2.8v5.2c0 4-2.9 7.6-7 9-4.1-1.4-7-5-7-9V6.2z"/><path d="M9 12l2.2 2.2L15.2 10"/>'
+};
+/* platform → symbol */
+const GL = {
+ twitch:"live",kick:"live",dlive:"live",trovo:"live",youtube:"play",rumble:"play",bitview:"play",
+ bitchute:"play",odysee:"play",dailymotion:"play",vimeo:"play",tiktok:"music",streamlabs:"tv",
+ streamelements:"tv",medal:"tv",x:"chat",threads:"chat",bluesky:"cloud",mastodon:"users",
+ facebook:"users",vk:"users",locals:"users",reddit:"users",linkedin:"users",discord:"chat",
+ telegram:"send",whatsapp:"chat",signal:"chat",line:"chat",kakao:"chat",snapchat:"camera",
+ instagram:"camera",flickr:"camera",imgur:"image",pinterest:"pin",tumblr:"image",
+ github:"code",gitlab:"code",codepen:"code",devto:"code",stackoverflow:"code",
+ steam:"controller",xbox:"controller",playstation:"controller",nintendo:"controller",
+ epicgames:"controller",battlenet:"controller",riot:"controller",roblox:"controller",
+ minecraft:"box",gog:"controller",itchio:"controller",speedrun:"trophy",
+ soundcloud:"cloud",spotify:"music",applemusic:"music",bandcamp:"music",
+ patreon:"heart",kofi:"cup",bmac:"cup",throne:"box",fourthwall:"box",gumroad:"box",
+ etsy:"cart",merch:"cart",shopify:"cart",paypal:"card",cashapp:"card",venmo:"card",donate:"heart",
+ substack:"book",medium:"book",dribbble:"brush",behance:"brush",artstation:"brush",
+ deviantart:"brush",newgrounds:"flame",email:"mail",website:"globe"
+};
+function glyphSVG(name){
+  const g = GLYPHS[name] || GLYPHS.link;
+  return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round">${g}</svg>`;
+}
+
+/* turn an uploaded .svg file into inline markup, optionally recoloured */
+function processSVG(text, tint){
+  try{
+    const doc = new DOMParser().parseFromString(text, "image/svg+xml");
+    const svg = doc.querySelector("svg");
+    if(!svg || doc.querySelector("parsererror")) return null;
+    svg.querySelectorAll("script,foreignObject").forEach(n=>n.remove());
+    svg.removeAttribute("width"); svg.removeAttribute("height"); svg.removeAttribute("style");
+    if(!svg.getAttribute("viewBox")) svg.setAttribute("viewBox","0 0 24 24");
+    svg.setAttribute("preserveAspectRatio","xMidYMid meet");
+    if(tint){
+      svg.setAttribute("fill","currentColor");
+      svg.querySelectorAll("*").forEach(n=>{
+        n.removeAttribute("style");
+        if(n.hasAttribute("fill") && n.getAttribute("fill").toLowerCase()!=="none") n.setAttribute("fill","currentColor");
+        if(n.hasAttribute("stroke") && n.getAttribute("stroke").toLowerCase()!=="none") n.setAttribute("stroke","currentColor");
+      });
+    }
+    return new XMLSerializer().serializeToString(svg);
+  }catch(e){ return null; }
+}
+
+/* filename → platform id */
+const ALIAS = {twitter:"x",twitterx:"x",xtwitter:"x",xcom:"x",steamcommunity:"steam",
+ buymeacoffee:"bmac",coffee:"bmac",itch:"itchio",itchdotio:"itchio",dev:"devto",devdotto:"devto",
+ gmail:"email",mail:"email",googlemail:"email",web:"website",home:"website",psn:"playstation",
+ playstation5:"playstation",ps:"playstation",applemusicapp:"applemusic",speedruncom:"speedrun",
+ kofiapp:"kofi",xboxlive:"xbox",instagramalt:"instagram",metafacebook:"facebook"};
+function matchKey(filename){
+  const s = filename.replace(/\.[^.]+$/,"").toLowerCase().replace(/[^a-z0-9]/g,"");
+  if(ALIAS[s]) return ALIAS[s];
+  if(PMAP[s]) return s;
+  const exact = PLATFORMS.find(p=>p[1].toLowerCase().replace(/[^a-z0-9]/g,"")===s);
+  if(exact) return exact[0];
+  const part = PLATFORMS.find(p=>s.includes(p[0]) || p[0].includes(s));
+  return part ? part[0] : null;
+}
+
+/* ============================================================
+   PALETTES  (12)
+============================================================ */
+const PALETTES = [
+ {id:"sticker",name:"Sticker",c1:"#ffffff",c2:"#000000",ink:"#0a0a0a",chip:"#ffffff",stroke:"#000000",glow:"#ffffff"},
+ {id:"neonpink",name:"Neon Pink",c1:"#ff2d95",c2:"#7a00ff",ink:"#ffffff",chip:"#16001f",stroke:"#ff2d95",glow:"#ff2d95"},
+ {id:"cyber",name:"Cyber Cyan",c1:"#00e5ff",c2:"#0066ff",ink:"#eaffff",chip:"#001018",stroke:"#00e5ff",glow:"#00e5ff"},
+ {id:"toxic",name:"Toxic",c1:"#9dff2b",c2:"#00ff9d",ink:"#06230a",chip:"#06160a",stroke:"#9dff2b",glow:"#9dff2b"},
+ {id:"lava",name:"Lava",c1:"#ff5a1f",c2:"#ff0040",ink:"#fff6f2",chip:"#1a0600",stroke:"#ff5a1f",glow:"#ff5a1f"},
+ {id:"royal",name:"Royal",c1:"#9146ff",c2:"#d9a7ff",ink:"#ffffff",chip:"#150a26",stroke:"#9146ff",glow:"#9146ff"},
+ {id:"gold",name:"Gold",c1:"#ffcf4d",c2:"#a9792b",ink:"#1b1300",chip:"#140e02",stroke:"#ffcf4d",glow:"#ffcf4d"},
+ {id:"ice",name:"Ice",c1:"#cfe9ff",c2:"#6aa9ff",ink:"#06121f",chip:"#071a2b",stroke:"#cfe9ff",glow:"#9ad3ff"},
+ {id:"mono",name:"Mono",c1:"#ffffff",c2:"#9a9a9a",ink:"#111111",chip:"#f2f2f2",stroke:"#ffffff",glow:"#ffffff"},
+ {id:"blood",name:"Blood",c1:"#e01b24",c2:"#6b0000",ink:"#ffffff",chip:"#180000",stroke:"#e01b24",glow:"#e01b24"},
+ {id:"sunset",name:"Sunset",c1:"#ff9a3c",c2:"#ff3cac",ink:"#1b0b22",chip:"#1d0a26",stroke:"#ff9a3c",glow:"#ff6ba0"},
+ {id:"mint",name:"Mint",c1:"#3ddc97",c2:"#0fa3b1",ink:"#042019",chip:"#04221b",stroke:"#3ddc97",glow:"#3ddc97"}
+];
+const PALMAP = Object.fromEntries(PALETTES.map(p=>[p.id,p]));
+
+/* ============================================================
+   LOOKS (30)  — each returns CSS for a scope prefix S
+============================================================ */
+const LOOKS = [
+{id:"sticker",name:"Sticker Pop",css:S=>`
+${S}.ov-item{filter:drop-shadow(0 0 1px #fff) drop-shadow(0 0 2px #fff) drop-shadow(.04em .07em .03em rgba(0,0,0,.65))}
+${S}.ov-label{color:#fff;-webkit-text-stroke:.085em #000;paint-order:stroke fill}
+${S}.ov-icon{color:var(--onc1);background:var(--c1);border-radius:.26em;padding:.1em;box-shadow:0 0 0 .07em #000}
+${S}.ov-mono{color:#fff;-webkit-text-stroke:.05em #000;paint-order:stroke fill}`},
+
+{id:"outline",name:"Outline Pill",css:S=>`
+${S}.ov-item{border:.08em solid var(--c1);border-radius:999px;padding:.34em .85em;color:var(--c1)}
+${S}.ov-icon{background:transparent}
+${S}.ov-mono{color:var(--c1)}`},
+
+{id:"neon",name:"Neon Sign",css:S=>`
+${S}.ov-item{background:var(--chip);border:.07em solid var(--c1);border-radius:.5em;padding:.34em .8em;
+ box-shadow:0 0 .5em var(--glow),0 0 1.4em color-mix(in srgb,var(--glow) 55%,transparent),inset 0 0 .5em color-mix(in srgb,var(--glow) 25%,transparent)}
+${S}.ov-label{color:#fff;text-shadow:0 0 .25em var(--glow),0 0 .7em var(--glow)}
+${S}.ov-icon{background:transparent;filter:drop-shadow(0 0 .25em var(--glow))}
+${S}.ov-mono{color:var(--c1)}`},
+
+{id:"glass",name:"Frosted Glass",css:S=>`
+${S}.ov-item{background:rgba(255,255,255,.12);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+ border:1px solid rgba(255,255,255,.3);border-radius:.75em;padding:.38em .85em;box-shadow:0 .3em 1em rgba(0,0,0,.35)}
+${S}.ov-label{color:#fff;text-shadow:0 .05em .2em rgba(0,0,0,.5)}
+${S}.ov-icon{color:var(--onc1);background:var(--c1);border-radius:.4em;padding:.12em}`},
+
+{id:"solidpill",name:"Solid Pill",css:S=>`
+${S}.ov-item{background:var(--c1);border-radius:999px;padding:.4em .95em;box-shadow:0 .2em .5em rgba(0,0,0,.4)}
+${S}.ov-label{color:var(--onc1)}
+${S}.ov-mono{color:var(--onc1)}
+${S}.ov-icon{color:var(--onc1)}`},
+
+{id:"ghost",name:"Ghost Text",css:S=>`
+${S}.ov-item{color:var(--c1)}
+${S}.ov-label{text-shadow:0 .08em .2em rgba(0,0,0,.6)}
+${S}.ov-icon{background:transparent}`},
+
+{id:"terminal",name:"Terminal",css:S=>`
+${S}.ov-item{background:#07090a;border:.06em solid var(--c1);border-radius:.15em;padding:.3em .7em;font-family:"Consolas",monospace}
+${S}.ov-label{color:var(--c1);font-family:"Consolas",monospace;font-weight:600}
+${S}.ov-label::before{content:"> ";opacity:.6}
+${S}.ov-mono{color:var(--c1);font-family:"Consolas",monospace}
+${S}.ov-icon{background:transparent}`},
+
+{id:"extrude",name:"3D Extrude",css:S=>`
+${S}.ov-item{background:var(--c1);border:.1em solid #000;border-radius:.35em;padding:.36em .85em;
+ box-shadow:.18em .22em 0 var(--c2),.18em .22em 0 .1em #000}
+${S}.ov-label{color:var(--onc1)}
+${S}.ov-mono{color:var(--onc1)}
+${S}.ov-icon{color:var(--onc1)}`},
+
+{id:"gradient",name:"Gradient Chip",css:S=>`
+${S}.ov-item{background:linear-gradient(135deg,var(--c1),var(--c2));border-radius:.6em;padding:.4em .95em;box-shadow:0 .25em .7em rgba(0,0,0,.45)}
+${S}.ov-label{color:var(--onc1)}
+${S}.ov-mono{color:var(--onc1)}
+${S}.ov-icon{color:var(--onc1)}`},
+
+{id:"chrome",name:"Chrome",css:S=>`
+${S}.ov-item{padding:.3em .6em}
+${S}.ov-label{background:linear-gradient(180deg,#fff 0%,#cfd6e4 38%,#6c7585 52%,#e9eef7 62%,#fff 100%);
+ -webkit-background-clip:text;background-clip:text;color:transparent;
+ filter:drop-shadow(0 .05em 0 rgba(0,0,0,.6)) drop-shadow(0 0 .1em rgba(255,255,255,.7))}
+${S}.ov-icon{color:#222;background:linear-gradient(180deg,#f4f7ff,#7f8796);border-radius:.3em;padding:.12em;box-shadow:inset 0 0 0 1px rgba(0,0,0,.4)}
+${S}.ov-mono{color:#222}`},
+
+{id:"paper",name:"Paper Cut",css:S=>`
+${S}.ov-item{background:#fdfcf7;border-radius:.2em;padding:.38em .85em;box-shadow:0 .25em .5em rgba(0,0,0,.35),0 0 0 1px rgba(0,0,0,.12)}
+${S}.ov-label{color:#17161a}
+${S}.ov-icon{color:var(--onc1);background:var(--c1);border-radius:.2em;padding:.12em}`},
+
+{id:"tape",name:"Tape Strip",css:S=>`
+${S}.ov-item{background:color-mix(in srgb,var(--c1) 80%,transparent);padding:.4em 1.1em;transform:rotate(-1.6deg);
+ box-shadow:0 .2em .5em rgba(0,0,0,.35);clip-path:polygon(2% 0,98% 3%,100% 97%,1% 100%)}
+${S}.ov-label{color:var(--onc1)}
+${S}.ov-mono{color:var(--onc1)}
+${S}.ov-icon{color:var(--onc1)}`},
+
+{id:"underline",name:"Underline",css:S=>`
+${S}.ov-item{padding:.2em .1em .3em;border-bottom:.18em solid var(--c1)}
+${S}.ov-label{color:#fff;text-shadow:0 .06em .2em rgba(0,0,0,.55)}
+${S}.ov-icon{background:transparent}
+${S}.ov-mono{color:var(--c1)}`},
+
+{id:"badge",name:"Square Badge",css:S=>`
+${S}.ov-item{background:var(--c1);border-radius:0;padding:.42em .9em}
+${S}.ov-label{color:var(--onc1)}
+${S}.ov-mono{color:var(--onc1)}
+${S}.ov-icon{color:var(--onc1)}`},
+
+{id:"hex",name:"Cut Corner",css:S=>`
+${S}.ov-item{background:var(--chip);border:.06em solid var(--c1);padding:.4em 1em;
+ clip-path:polygon(.7em 0,100% 0,100% calc(100% - .7em),calc(100% - .7em) 100%,0 100%,0 .7em)}
+${S}.ov-label{color:var(--c1)}
+${S}.ov-mono{color:var(--c1)}`},
+
+{id:"comic",name:"Comic Panel",css:S=>`
+${S}.ov-item{background:#fff;border:.11em solid #000;border-radius:.25em;padding:.34em .8em;box-shadow:.17em .2em 0 #000}
+${S}.ov-label{color:#000;text-transform:uppercase;letter-spacing:.02em}
+${S}.ov-icon{color:var(--onc1);background:var(--c1);border:.08em solid #000;border-radius:.2em;padding:.1em}`},
+
+{id:"inset",name:"Carved Inset",css:S=>`
+${S}.ov-item{background:#14131a;border-radius:.5em;padding:.4em .9em;box-shadow:inset .08em .1em .3em rgba(0,0,0,.9),inset -.05em -.06em .2em rgba(255,255,255,.07)}
+${S}.ov-label{color:var(--c1);text-shadow:0 .06em 0 rgba(0,0,0,.9)}
+${S}.ov-icon{background:transparent}`},
+
+{id:"double",name:"Double Ring",css:S=>`
+${S}.ov-item{background:var(--chip);border:.06em solid var(--c1);border-radius:.6em;padding:.36em .85em;
+ box-shadow:0 0 0 .12em var(--chip),0 0 0 .18em var(--c2)}
+${S}.ov-label{color:#fff}
+${S}.ov-mono{color:var(--c1)}`},
+
+{id:"shadowbox",name:"Colour Drop",css:S=>`
+${S}.ov-item{background:#141218;border-radius:.6em;padding:.4em .9em;box-shadow:0 .35em 1.1em color-mix(in srgb,var(--c1) 55%,transparent)}
+${S}.ov-label{color:#fff}
+${S}.ov-icon{color:var(--onc1);background:var(--c1);border-radius:.35em;padding:.12em}`},
+
+{id:"soft",name:"Soft Card",css:S=>`
+${S}.ov-item{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.14);border-radius:.9em;padding:.42em .95em}
+${S}.ov-label{color:#f2f2f5;font-weight:600}
+${S}.ov-icon{color:var(--onc1);background:var(--c1);border-radius:50%;padding:.16em}`},
+
+{id:"ribbon",name:"Skew Ribbon",css:S=>`
+${S}.ov-item{background:var(--c1);padding:.4em 1em;transform:skewX(-12deg)}
+${S}.ov-label,${S}.ov-icon{color:var(--onc1);transform:skewX(12deg)}
+${S}.ov-label{color:var(--onc1)}
+${S}.ov-mono{color:var(--onc1)}`},
+
+{id:"led",name:"LED Board",css:S=>`
+${S}.ov-item{background:#050505;background-image:radial-gradient(rgba(255,255,255,.07) 1px,transparent 1px);background-size:4px 4px;
+ border:.05em solid #222;border-radius:.2em;padding:.36em .8em}
+${S}.ov-label{color:var(--c1);font-family:"Consolas",monospace;letter-spacing:.06em;text-shadow:0 0 .35em var(--glow)}
+${S}.ov-mono{color:var(--c1);font-family:"Consolas",monospace}
+${S}.ov-icon{background:transparent;filter:drop-shadow(0 0 .3em var(--glow))}`},
+
+{id:"brutal",name:"Brutalist",css:S=>`
+${S}.ov-item{background:var(--c1);border:.14em solid #000;border-radius:0;padding:.38em .9em;box-shadow:.22em .22em 0 #000}
+${S}.ov-label{color:var(--onc1);text-transform:uppercase;font-weight:900}
+${S}.ov-mono{color:var(--onc1)}
+${S}.ov-icon{color:var(--onc1)}`},
+
+{id:"arcade",name:"Arcade",css:S=>`
+${S}.ov-item{background:#0b0b14;border:.1em solid var(--c1);border-radius:0;padding:.36em .8em;box-shadow:0 0 0 .1em #000,.14em .14em 0 var(--c2)}
+${S}.ov-label{color:var(--c1);font-family:"Consolas",monospace;letter-spacing:.1em;text-transform:uppercase;
+ text-shadow:.06em .06em 0 var(--c2)}
+${S}.ov-mono{color:var(--c1);font-family:"Consolas",monospace}
+${S}.ov-icon{background:transparent}`},
+
+{id:"vapor",name:"Vaporwave",css:S=>`
+${S}.ov-item{background:linear-gradient(180deg,rgba(255,255,255,.08),rgba(0,0,0,.25));border-radius:.3em;padding:.38em .9em;
+ border-top:.06em solid rgba(255,255,255,.35)}
+${S}.ov-label{background:linear-gradient(90deg,var(--c1),var(--c2));-webkit-background-clip:text;background-clip:text;color:transparent;
+ filter:drop-shadow(.045em 0 0 rgba(255,0,80,.75)) drop-shadow(-.045em 0 0 rgba(0,230,255,.75))}
+${S}.ov-icon{color:var(--onc1);background:linear-gradient(135deg,var(--c1),var(--c2));border-radius:.25em;padding:.12em}`},
+
+{id:"tag",name:"Mini Tag",css:S=>`
+${S}.ov-item{background:color-mix(in srgb,var(--c1) 18%,transparent);border:1px solid color-mix(in srgb,var(--c1) 55%,transparent);
+ border-radius:.4em;padding:.26em .6em;font-size:calc(var(--size) * .88)}
+${S}.ov-label{color:var(--c1);font-weight:600}
+${S}.ov-mono{color:var(--c1)}`},
+
+{id:"split",name:"Two-Tone",css:S=>`
+${S}.ov-item{gap:0;background:#121118;border:.05em solid var(--c1);border-radius:.45em;overflow:hidden;padding:0}
+${S}.ov-icon{color:var(--onc1);background:var(--c1);width:1.95em;height:1.95em;border-radius:0;padding:.38em}
+${S}.ov-label{color:#fff;padding:.4em .8em}
+${S}.ov-mono{color:var(--onc1)}`},
+
+{id:"marker",name:"Highlighter",css:S=>`
+${S}.ov-item{padding:.2em .5em;background:linear-gradient(180deg,transparent 54%,color-mix(in srgb,var(--c1) 85%,transparent) 54%,color-mix(in srgb,var(--c1) 85%,transparent) 94%,transparent 94%)}
+${S}.ov-label{color:#fff;text-shadow:0 .05em .15em rgba(0,0,0,.5)}
+${S}.ov-icon{color:#fff;background:transparent}`},
+
+{id:"ring",name:"Ringed Icon",css:S=>`
+${S}.ov-item{padding:.1em}
+${S}.ov-icon{background:var(--chip);border:.1em solid var(--c1);border-radius:50%;width:1.9em;height:1.9em;padding:.34em;
+ box-shadow:0 .15em .45em rgba(0,0,0,.45)}
+${S}.ov-label{color:#fff;text-shadow:0 .07em .2em rgba(0,0,0,.6)}
+${S}.ov-mono{color:var(--c1)}`},
+
+{id:"tube",name:"Neon Tube",css:S=>`
+${S}.ov-item{padding:.2em .4em}
+${S}.ov-label{color:transparent;-webkit-text-stroke:.055em var(--c1);paint-order:stroke fill;
+ filter:drop-shadow(0 0 .14em var(--glow)) drop-shadow(0 0 .5em var(--glow))}
+${S}.ov-icon{background:transparent;filter:drop-shadow(0 0 .3em var(--glow))}
+${S}.ov-mono{color:var(--c1)}`}
+];
+const LOOKMAP = Object.fromEntries(LOOKS.map(l=>[l.id,l]));
+
+const FONTS = [
+ ['Inter, "Segoe UI", system-ui, sans-serif','Inter / System'],
+ ['"Arial Black", Arial, sans-serif','Arial Black'],
+ ['Impact, Haettenschweiler, "Arial Narrow Bold", sans-serif','Impact'],
+ ['"Trebuchet MS", sans-serif','Trebuchet'],
+ ['Verdana, Geneva, sans-serif','Verdana'],
+ ['Tahoma, sans-serif','Tahoma'],
+ ['"Segoe UI", sans-serif','Segoe UI'],
+ ['Georgia, serif','Georgia'],
+ ['"Times New Roman", serif','Times'],
+ ['"Courier New", monospace','Courier'],
+ ['Consolas, "Lucida Console", monospace','Consolas'],
+ ['"Comic Sans MS", cursive','Comic Sans'],
+ ['"Franklin Gothic Medium", "Arial Narrow", sans-serif','Franklin Gothic'],
+ ['"Lucida Sans Unicode", sans-serif','Lucida']
+];
+
+/* ============================================================
+   STATE
+============================================================ */
+const DEFAULT_ON = [
+ ["twitch","MrrZed0"],["kick","MrrZed0"],["youtube","@MrrZed0"],
+ ["tiktok","@MrrZed0"],["x","MrrZed0"],["facebook","MrrZed00"]
+];
+
+function freshState(){
+  const onMap = Object.fromEntries(DEFAULT_ON);
+  const order = DEFAULT_ON.map(d=>d[0]);
+  const rest = PLATFORMS.map(p=>p[0]).filter(id=>!order.includes(id));
+  return {
+    look:"sticker", pal:"sticker", brand:true,
+    font:0, size:26, gap:20, igap:9, ls:0, isize:115,
+    upper:false, showLabel:true, showIcon:true, at:false, links:false,
+    dir:"row", align:"center", justify:"center", wrap:false, pad:24,
+    bgMode:"transparent", bgColor:"#101014",
+    anim:"none", speed:8,
+    logo:{show:true,src:"logo.png",pos:"middle",split:3,size:150,shape:"circle",ring:0,ringC:"#ffffff",glow:0,glowC:"#7c5cff",spin:"none",bg:"#000000",bgOn:true},
+    iconDir:"icons/", iconTry:false, iconMode:"glyph", tintSvg:true, icons:{},
+    items:[...order,...rest].map(id=>({id,on:!!onMap[id],handle:onMap[id]||"",label:"",url:"",icon:"",color:"",name:""}))
+  };
+}
+let state = freshState();
+let onlyEnabled = false, search = "", lookSearch = "";
+
+/* ============================================================
+   HELPERS
+============================================================ */
+const $ = s=>document.querySelector(s);
+const esc = s=>String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+function meta(it){
+  if(it.id.startsWith("custom:")) return {id:it.id,name:it.name||"Custom",color:it.color||"#888888",mono:(it.name||"CU").slice(0,2).toUpperCase(),url:""};
+  return PMAP[it.id]||{id:it.id,name:it.id,color:"#888",mono:"??",url:""};
+}
+function iconKey(it){ return it.id.startsWith("custom:") ? (it.name||"custom").toLowerCase().replace(/[^a-z0-9]+/g,"-") : it.id; }
+function contrast(hex){
+  const h=(hex||"#888").replace("#","");
+  const v=h.length===3?h.split("").map(c=>c+c).join(""):h;
+  const r=parseInt(v.substr(0,2),16)||0,g=parseInt(v.substr(2,2),16)||0,b=parseInt(v.substr(4,2),16)||0;
+  return (r*299+g*587+b*114)/1000 > 150 ? "#0b0b0b" : "#ffffff";
+}
+function displayLabel(it){
+  if(it.label) return it.label;
+  let h = it.handle || meta(it).name;
+  if(state.at && h && !h.startsWith("@") && !h.includes("/")) h = "@"+h;
+  return h;
+}
+function itemURL(it){
+  if(it.url) return it.url;
+  const m = meta(it);
+  if(!m.url) return "#";
+  const h = (it.handle||"").replace(/^@/,"");
+  return m.url + h;
+}
+
+/* ============================================================
+   CSS BUILDER
+============================================================ */
+function baseCSS(S){
+  return `
+${S}.ov-root{width:100%;height:100%;min-height:100%;display:flex;align-items:var(--align);justify-content:var(--justify);padding:var(--pad);box-sizing:border-box}
+${S}.ov-wrap{display:flex;flex-direction:var(--dir);align-items:center;justify-content:center;gap:var(--gap);
+  font-family:var(--font);flex-wrap:var(--wrapv);max-width:100%}
+${S}.ov-group{display:flex;flex-direction:var(--dir);align-items:center;justify-content:center;gap:var(--gap);flex-wrap:var(--wrapv)}
+${S}.ov-item{display:inline-flex;align-items:center;gap:var(--igap);font-size:var(--size);line-height:1;
+  text-decoration:none;color:inherit;box-sizing:border-box;white-space:nowrap}
+${S}.ov-icon{position:relative;width:calc(1.15em * var(--isize));height:calc(1.15em * var(--isize));
+  flex:0 0 auto;display:grid;place-items:center;overflow:hidden;box-sizing:border-box;color:var(--c1)}
+${S}.ov-icon>*{grid-area:1/1}
+${S}.ov-icon img,${S}.ov-icon svg{width:100%;height:100%;object-fit:contain;display:block}
+${S}.ov-mono{font-weight:900;font-size:.58em;letter-spacing:-.02em;line-height:1;justify-self:center;align-self:center}
+${S}.ov-label{font-weight:800;white-space:nowrap;letter-spacing:var(--ls);text-transform:var(--tt)}
+${S}.ov-logo{flex:0 0 auto;width:var(--logoSize);height:var(--logoSize);display:grid;place-items:center;overflow:hidden;box-sizing:border-box}
+${S}.ov-logo img{width:100%;height:100%;object-fit:cover;display:block}
+${S}.ov-stack{display:flex;flex-direction:column;align-items:center;gap:var(--gap)}
+@keyframes ovpulse{0%,100%{transform:scale(1)}50%{transform:scale(1.07)}}
+@keyframes ovfloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-.22em)}}
+@keyframes ovglow{0%,100%{filter:brightness(1)}50%{filter:brightness(1.45)}}
+@keyframes ovtilt{0%,100%{transform:rotate(-1.6deg)}50%{transform:rotate(1.6deg)}}
+@keyframes ovspin{to{transform:rotate(360deg)}}
+@keyframes ovscroll{from{transform:translateX(0)}to{transform:translateX(-50%)}}`;
+}
+
+function varsCSS(S){
+  const p = PALMAP[state.pal], f = FONTS[state.font][0];
+  const bg = state.bgMode==="solid" ? state.bgColor
+          : state.bgMode==="gradient" ? `linear-gradient(135deg,${p.chip},${state.bgColor})`
+          : "transparent";
+  return `
+${S}.ov-root{
+  --c1:${p.c1}; --c2:${p.c2}; --ink:${p.ink}; --chip:${p.chip}; --stroke:${p.stroke}; --glow:${p.glow};
+  --onc1:${contrast(p.c1)};
+  --font:${f};
+  --size:${state.size}px; --gap:${state.gap}px; --igap:${state.igap}px; --ls:${state.ls/100}em;
+  --isize:${state.isize/100};
+  --pad:${state.pad}px; --dir:${state.dir}; --align:${state.align}; --justify:${state.justify};
+  --wrapv:${state.wrap?"wrap":"nowrap"}; --tt:${state.upper?"uppercase":"none"};
+  --logoSize:${state.logo.size}px;
+  background:${bg};
+}`;
+}
+
+function logoCSS(S){
+  const L=state.logo;
+  const radius = L.shape==="circle"?"50%":L.shape==="round"?"18%":"0";
+  let css = `
+${S}.ov-logo{border-radius:${radius};`;
+  if(L.bgOn) css += `background:${L.bg};`;
+  if(L.shape==="none") css += `overflow:visible;`;
+  if(L.ring>0) css += `border:${L.ring}px solid ${L.ringC};`;
+  if(L.glow>0) css += `box-shadow:0 0 ${L.glow}px ${L.glowC},0 0 ${L.glow*2.2}px color-mix(in srgb,${L.glowC} 50%,transparent);`;
+  css += `}
+${S}.ov-logo img{border-radius:${L.shape==="none"?"0":"inherit"};${L.shape==="none"?"object-fit:contain;":""}}`;
+  if(L.spin==="slow") css += `\n${S}.ov-logo{animation:ovspin 18s linear infinite}`;
+  if(L.spin==="pulse") css += `\n${S}.ov-logo{animation:ovpulse 2.6s ease-in-out infinite}`;
+  if(L.spin==="float") css += `\n${S}.ov-logo{animation:ovfloat 3.2s ease-in-out infinite}`;
+  return css;
+}
+
+function animCSS(S){
+  const d = state.speed, n = state.items.filter(i=>i.on).length||1;
+  switch(state.anim){
+    case "pulse": return `\n${S}.ov-item{animation:ovpulse ${d*0.35}s ease-in-out infinite}
+${S}.ov-item:nth-child(2n){animation-delay:.35s}${S}.ov-item:nth-child(3n){animation-delay:.7s}`;
+    case "float": return `\n${S}.ov-item{animation:ovfloat ${d*0.42}s ease-in-out infinite}
+${S}.ov-item:nth-child(2n){animation-delay:.3s}${S}.ov-item:nth-child(3n){animation-delay:.6s}`;
+    case "glow": return `\n${S}.ov-item{animation:ovglow ${d*0.45}s ease-in-out infinite}
+${S}.ov-item:nth-child(2n){animation-delay:.4s}`;
+    case "tilt": return `\n${S}.ov-item{animation:ovtilt ${d*0.4}s ease-in-out infinite}
+${S}.ov-item:nth-child(2n){animation-direction:reverse}`;
+    case "marquee": return `
+${S}.ov-marquee{overflow:hidden;width:100%}
+${S}.ov-marquee .ov-track{display:flex;width:max-content;animation:ovscroll ${d*2.6}s linear infinite}
+${S}.ov-marquee .ov-group{padding-right:var(--gap)}`;
+    case "cycle": {
+      const vis = 100/n, fade = Math.min(vis*0.22, 4);
+      return `
+@keyframes ovcycle{0%{opacity:0;transform:translate(-50%,-50%) scale(.94)}
+${fade.toFixed(2)}%{opacity:1;transform:translate(-50%,-50%) scale(1)}
+${(vis-fade).toFixed(2)}%{opacity:1;transform:translate(-50%,-50%) scale(1)}
+${vis.toFixed(2)}%{opacity:0;transform:translate(-50%,-50%) scale(1.04)}
+100%{opacity:0}}
+${S}.ov-cycle{position:relative;width:100%;min-height:calc(var(--size) * 2.4)}
+${S}.ov-cycle .ov-item{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);opacity:0;
+ animation:ovcycle ${d*n*0.42}s linear infinite;animation-delay:calc(var(--i) * ${(d*0.42).toFixed(2)}s)}`;
+    }
+    default: return "";
+  }
+}
+
+function buildCSS(S){
+  const pre = S ? S+" " : "";
+  return baseCSS(pre) + "\n" + varsCSS(pre) + "\n" + LOOKMAP[state.look].css(pre) + "\n" + logoCSS(pre) + animCSS(pre);
+}
+
+/* ============================================================
+   MARKUP BUILDER
+============================================================ */
+function itemHTML(it, idx){
+  const m = meta(it);
+  const col = it.color || (state.brand ? m.color : "");
+  const styleVar = col ? ` style="--c1:${esc(col)};--onc1:${contrast(col)};--glow:${esc(col)};--stroke:${esc(col)};--i:${idx}"` : ` style="--i:${idx}"`;
+  const tag = state.links ? "a" : "div";
+  const href = state.links ? ` href="${esc(itemURL(it))}" target="_blank" rel="noopener"` : "";
+  let icon = "";
+  if(state.showIcon){
+    const key = iconKey(it);
+    const base = state.iconMode === "mono"
+      ? `<span class="ov-mono">${esc(m.mono)}</span>`
+      : glyphSVG(GL[it.id] || "link");
+    const up = state.icons[key];
+    // drop the built-in fallback as soon as a real image loads; keep it if the file is missing
+    const drop = `onload="var p=this.previousElementSibling;if(p)p.remove()"`;
+    let inner;
+    if(up && up.svg){
+      inner = processSVG(up.svg, state.tintSvg) || base;        // loaded SVG replaces it outright
+    } else if(up && up.img){
+      inner = `<img src="${up.img}" alt="">`;                    // embedded image, always loads
+    } else if(it.icon){
+      inner = `${base}<img src="${esc(it.icon)}" alt="" ${drop} onerror="this.remove()">`;
+    } else if(state.iconTry){
+      const svgP = state.iconDir + key + ".svg", pngP = state.iconDir + key + ".png";
+      inner = `${base}<img src="${esc(svgP)}" alt="" ${drop} onerror="if(!this.dataset.f){this.dataset.f=1;this.src='${esc(pngP)}'}else{this.remove()}">`;
+    } else {
+      inner = base;
+    }
+    icon = `<span class="ov-icon">${inner}</span>`;
+  }
+  const label = state.showLabel && displayLabel(it) ? `<span class="ov-label">${esc(displayLabel(it))}</span>` : "";
+  return `<${tag} class="ov-item"${href}${styleVar}>${icon}${label}</${tag}>`;
+}
+
+function logoHTML(){
+  if(!state.logo.show) return "";
+  return `<div class="ov-logo"><img src="${esc(state.logo.src)}" alt="" onerror="this.remove()"></div>`;
+}
+
+function buildMarkup(){
+  const on = state.items.filter(i=>i.on);
+  const L = state.logo;
+
+  if(state.anim === "cycle"){
+    const items = on.map((it,i)=>itemHTML(it,i)).join("");
+    const stack = `<div class="ov-cycle">${items}</div>`;
+    const inner = L.show
+      ? (state.dir==="column" ? logoHTML()+stack : `<div class="ov-stack">${logoHTML()}${stack}</div>`)
+      : stack;
+    return `<div class="ov-root"><div class="ov-wrap" style="flex-direction:column">${inner}</div></div>`;
+  }
+
+  let inner;
+  if(L.show && L.pos==="middle"){
+    const k = Math.max(0, Math.min(on.length, L.split));
+    const a = on.slice(0,k).map((it,i)=>itemHTML(it,i)).join("");
+    const b = on.slice(k).map((it,i)=>itemHTML(it,i+k)).join("");
+    inner = `<div class="ov-group">${a}</div>${logoHTML()}<div class="ov-group">${b}</div>`;
+  } else {
+    const all = `<div class="ov-group">${on.map((it,i)=>itemHTML(it,i)).join("")}</div>`;
+    if(!L.show) inner = all;
+    else if(L.pos==="start") inner = logoHTML()+all;
+    else if(L.pos==="end")   inner = all+logoHTML();
+    else inner = `<div class="ov-stack">${logoHTML()}${all}</div>`;
+  }
+
+  if(state.anim==="marquee"){
+    const track = `<div class="ov-track">${inner}${inner}</div>`;
+    return `<div class="ov-root"><div class="ov-wrap ov-marquee">${track}</div></div>`;
+  }
+  return `<div class="ov-root"><div class="ov-wrap">${inner}</div></div>`;
+}
+
+/* ============================================================
+   EXPORT
+============================================================ */
+function buildDoc(){
+  const css = buildCSS("");
+  const bgLine = state.bgMode==="transparent" ? "transparent" : "inherit";
+  return `<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Social Overlay</title>
+<style>
+html,body{margin:0;padding:0;width:100%;height:100%;background:${bgLine};overflow:hidden}
+*{box-sizing:border-box}
+${css}
+</style>
+</head>
+<body>
+${buildMarkup()}
+</body>
+</html>`;
+}
+
+function download(name, text, type){
+  const blob = new Blob([text], {type:type||"text/plain"});
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob); a.download = name; a.click();
+  setTimeout(()=>URL.revokeObjectURL(a.href), 2000);
+}
+function readIcon(file, key, done){
+  const r = new FileReader();
+  const isSvg = /svg/i.test(file.type) || /\.svg$/i.test(file.name);
+  r.onload = ()=>{
+    if(isSvg) state.icons[key] = {svg:r.result, name:file.name};
+    else state.icons[key] = {img:r.result, name:file.name};
+    done && done();
+  };
+  isSvg ? r.readAsText(file) : r.readAsDataURL(file);
+}
+
+function takeIcons(files){
+  const list = [...files]; if(!list.length) return;
+  let done = 0, ok = 0; const missed = [];
+  list.forEach(f=>{
+    const key = matchKey(f.name);
+    if(!key){ missed.push(f.name); if(++done===list.length) finish(); return; }
+    readIcon(f, key, ()=>{ ok++; if(++done===list.length) finish(); });
+  });
+  function finish(){
+    renderItems(); renderPreview();
+    let msg = ok + " logo" + (ok===1?"":"s") + " loaded";
+    if(missed.length) msg += " · " + missed.length + " unmatched (rename to the platform name)";
+    toast(msg);
+    if(missed.length) console.log("Unmatched icon files:", missed);
+  }
+}
+
+function toast(msg){
+  const t=$("#toast"); t.textContent=msg; t.classList.add("on");
+  clearTimeout(t._t); t._t=setTimeout(()=>t.classList.remove("on"),1800);
+}
+
+/* ============================================================
+   RENDER — preview
+============================================================ */
+function renderPreview(){
+  $("#ovStyle").textContent = buildCSS("#pv");
+  $("#pv").innerHTML = buildMarkup();
+  $("#nowStyle").textContent = LOOKMAP[state.look].name + " · " + PALMAP[state.pal].name;
+  const r = $("#pv").getBoundingClientRect();
+  $("#dims").textContent = Math.round(r.width)+" × "+Math.round(r.height)+" px";
+  $("#linkCount").textContent = state.items.filter(i=>i.on).length + " on";
+  const nIcons = Object.keys(state.icons||{}).length;
+  $("#iconCount").textContent = nIcons ? nIcons + " loaded" : "built-in";
+  try{ localStorage.setItem("ovcfg", JSON.stringify(state)); }
+  catch(e){
+    if(!renderPreview._warned){ renderPreview._warned = true;
+      toast("Too many image icons to auto-save — use Save preset"); }
+  }
+}
+
+/* ============================================================
+   RENDER — look & palette pickers
+============================================================ */
+function renderLooks(){
+  const p = PALMAP[state.pal];
+  let css = "", html = "";
+  const list = LOOKS.filter(l=>!lookSearch || l.name.toLowerCase().includes(lookSearch) || l.id.includes(lookSearch));
+  list.forEach(l=>{
+    const S = "#lk-"+l.id;
+    css += `
+${S}{--c1:${p.c1};--c2:${p.c2};--ink:${p.ink};--chip:${p.chip};--stroke:${p.stroke};--glow:${p.glow};
+ --onc1:${contrast(p.c1)};--font:${FONTS[state.font][0]};--size:14px;--igap:5px;--ls:0;--isize:1;--tt:none}
+${S} .ov-item{display:inline-flex;align-items:center;gap:var(--igap);font-size:var(--size);line-height:1;font-family:var(--font);box-sizing:border-box}
+${S} .ov-icon{position:relative;width:1.15em;height:1.15em;display:grid;place-items:center;flex:0 0 auto;box-sizing:border-box;color:var(--c1);overflow:hidden}
+${S} .ov-icon>*{grid-area:1/1}
+${S} .ov-icon svg,${S} .ov-icon img{width:100%;height:100%;object-fit:contain;display:block}
+${S} .ov-mono{font-weight:900;font-size:.58em}
+${S} .ov-label{font-weight:800;white-space:nowrap;letter-spacing:var(--ls);text-transform:var(--tt)}
+${l.css(S+" ")}`;
+    html += `<div class="lookcard${l.id===state.look?" on":""}" data-look="${l.id}">
+      <div class="mini" id="lk-${l.id}"><div class="ov-item" style="--c1:${p.c1};--onc1:${contrast(p.c1)}">
+        <span class="ov-icon">${glyphSVG("live")}</span><span class="ov-label">Handle</span></div></div>
+      <b>${l.name}</b></div>`;
+  });
+  $("#lookStyle").textContent = css;
+  $("#looks").innerHTML = html;
+  $("#styleCount").textContent = (LOOKS.length*PALETTES.length) + " presets";
+}
+function renderPals(){
+  $("#pals").innerHTML = PALETTES.map(p=>
+    `<div class="pal${p.id===state.pal?" on":""}" data-pal="${p.id}" title="${p.name}"
+      style="background:linear-gradient(135deg,${p.c1} 0 50%,${p.c2} 50% 100%)"></div>`).join("");
+}
+
+/* ============================================================
+   RENDER — link list
+============================================================ */
+function listIcon(it){
+  const up = state.icons[iconKey(it)];
+  if(up && up.svg) return processSVG(up.svg, true) || "";
+  if(up && up.img) return `<img src="${up.img}" alt="">`;
+  return glyphSVG(GL[it.id] || "link");
+}
+
+function renderItems(){
+  const q = search.toLowerCase();
+  const html = state.items.map((it,i)=>{
+    const m = meta(it);
+    if(onlyEnabled && !it.on) return "";
+    if(q && !m.name.toLowerCase().includes(q) && !it.id.includes(q)) return "";
+    return `<div class="item${it.on?" on":""}" data-i="${i}" draggable="true">
+      <div class="ihead">
+        <span class="grip">⠿</span>
+        <input type="checkbox" class="tog" ${it.on?"checked":""} style="accent-color:var(--accent)">
+        <span class="ic${state.icons[iconKey(it)]?" has":""}" style="color:${m.color}">${listIcon(it)}</span>
+        <span class="nm">${esc(m.name)}</span>
+        <span class="hd">${esc(it.handle||"")}</span>
+        <button class="exp">⌄</button>
+      </div>
+      <div class="idet">
+        ${it.id.startsWith("custom:")?`<div class="row"><label>Name</label><input type="text" class="f" data-k="name" value="${esc(it.name)}"></div>`:""}
+        <div class="row"><label>Handle</label><input type="text" class="f" data-k="handle" value="${esc(it.handle)}" placeholder="YourName"></div>
+        <div class="row"><label>Label</label><input type="text" class="f" data-k="label" value="${esc(it.label)}" placeholder="overrides handle"></div>
+        <div class="row"><label>URL</label><input type="text" class="f" data-k="url" value="${esc(it.url)}" placeholder="${esc(m.url)}…"></div>
+        <div class="row"><label>Icon file</label><input type="text" class="f" data-k="icon" value="${esc(it.icon)}" placeholder="${esc(state.iconDir+iconKey(it))}.svg"></div>
+        <div class="grid2" style="margin:8px 0">
+          <button class="btn" data-act="up">Load a logo file</button>
+          <button class="btn" data-act="noicon">Use built-in</button>
+        </div>
+        <div class="row"><label>Colour</label><input type="color" class="f" data-k="color" value="${it.color||m.color}">
+          <button class="btn" data-act="clearcol">Use brand</button></div>
+        ${it.id.startsWith("custom:")?`<button class="btn wide" data-act="del">Delete this link</button>`:""}
+      </div>
+    </div>`;
+  }).join("");
+  $("#items").innerHTML = html;
+}
+
+/* ============================================================
+   WIRING
+============================================================ */
+function bind(id, key, ev, fn){
+  const el = $("#"+id);
+  el.addEventListener(ev||"input", e=>{ fn(e.target); renderPreview(); });
+}
+function num(id, path, suffix){
+  const el=$("#"+id), out=$("#"+id+"V");
+  const get=()=>path.split(".").reduce((o,k)=>o[k],state);
+  const set=v=>{const ks=path.split("."); const last=ks.pop(); ks.reduce((o,k)=>o[k],state)[last]=v;};
+  el.value = get();
+  if(out) out.textContent = get()+(suffix||"");
+  el.addEventListener("input",()=>{ set(+el.value); if(out) out.textContent = el.value+(suffix||""); renderPreview(); });
+}
+
+function syncUI(){
+  $("#brandMode").checked = state.brand;
+  $("#font").innerHTML = FONTS.map((f,i)=>`<option value="${i}">${f[1]}</option>`).join("");
+  $("#font").value = state.font;
+  ["upper","showLabel","showIcon"].forEach(k=>{});
+  $("#upper").checked=state.upper; $("#showLabel").checked=state.showLabel;
+  $("#showIcon").checked=state.showIcon; $("#atPrefix").checked=state.at; $("#links").checked=state.links;
+  $("#dir").value=state.dir; $("#align").value=state.align; $("#justify").value=state.justify;
+  $("#wrapOn").checked=state.wrap; $("#bgMode").value=state.bgMode; $("#bgColor").value=state.bgColor;
+  $("#anim").value=state.anim;
+  $("#logoShow").checked=state.logo.show; $("#logoSrc").value=state.logo.src;
+  $("#logoPos").value=state.logo.pos; $("#logoShape").value=state.logo.shape;
+  $("#logoRingC").value=state.logo.ringC; $("#logoGlowC").value=state.logo.glowC;
+  $("#logoSpin").value=state.logo.spin;
+  $("#logoBg").value=state.logo.bg||"#000000"; $("#logoBgOn").value=state.logo.bgOn?"1":"0";
+  $("#iconDir").value=state.iconDir; $("#iconTry").checked=state.iconTry;
+  $("#iconMode").value=state.iconMode||"glyph"; $("#tintSvg").checked=state.tintSvg!==false;
+  if(!state.icons) state.icons={};
+  num("size","size","px"); num("gap","gap","px"); num("igap","igap","px");
+  num("ls","ls",""); num("isize","isize","%"); num("pad","pad","px"); num("speed","speed","");
+  num("split","logo.split",""); num("logoSize","logo.size","px");
+  num("logoRing","logo.ring","px"); num("logoGlow","logo.glow","px");
+}
+
+function init(){
+  const saved = localStorage.getItem("ovcfg");
+  if(saved){ try{ const s=JSON.parse(saved); if(s && s.items) state = s; }catch(e){} }
+
+  syncUI(); renderPals(); renderLooks(); renderItems(); renderPreview();
+
+  // style
+  $("#pals").addEventListener("click",e=>{
+    const el=e.target.closest("[data-pal]"); if(!el) return;
+    state.pal=el.dataset.pal; renderPals(); renderLooks(); renderPreview();
+  });
+  $("#looks").addEventListener("click",e=>{
+    const el=e.target.closest("[data-look]"); if(!el) return;
+    state.look=el.dataset.look; renderLooks(); renderPreview();
+  });
+  $("#lookSearch").addEventListener("input",e=>{ lookSearch=e.target.value.toLowerCase(); renderLooks(); });
+  $("#brandMode").addEventListener("change",e=>{ state.brand=e.target.checked; renderPreview(); });
+  $("#shuffle").addEventListener("click",()=>{
+    state.look = LOOKS[Math.floor(Math.random()*LOOKS.length)].id;
+    state.pal  = PALETTES[Math.floor(Math.random()*PALETTES.length)].id;
+    renderPals(); renderLooks(); renderPreview(); toast("Style: "+LOOKMAP[state.look].name+" / "+PALMAP[state.pal].name);
+  });
+
+  // text + toggles
+  $("#font").addEventListener("change",e=>{ state.font=+e.target.value; renderLooks(); renderPreview(); });
+  const toggles = {upper:"upper",showLabel:"showLabel",showIcon:"showIcon",atPrefix:"at",links:"links",wrapOn:"wrap",iconTry:"iconTry",logoShow:"logo.show"};
+  Object.entries(toggles).forEach(([id,key])=>{
+    $("#"+id).addEventListener("change",e=>{
+      if(key.includes(".")){ const [a,b]=key.split("."); state[a][b]=e.target.checked; }
+      else state[key]=e.target.checked;
+      renderPreview();
+    });
+  });
+  ["dir","align","justify","bgMode","anim"].forEach(id=>{
+    $("#"+id).addEventListener("change",e=>{ state[id]=e.target.value; renderPreview(); });
+  });
+  $("#bgColor").addEventListener("input",e=>{ state.bgColor=e.target.value; renderPreview(); });
+  ["logoPos","logoShape","logoSpin"].forEach(id=>{
+    const key=id.replace("logo","").toLowerCase();
+    $("#"+id).addEventListener("change",e=>{ state.logo[key]=e.target.value; renderPreview(); });
+  });
+  $("#logoSrc").addEventListener("input",e=>{ state.logo.src=e.target.value; renderPreview(); });
+  $("#logoBg").addEventListener("input",e=>{ state.logo.bg=e.target.value; renderPreview(); });
+  $("#logoBgOn").addEventListener("change",e=>{ state.logo.bgOn=e.target.value==="1"; renderPreview(); });
+  $("#logoRingC").addEventListener("input",e=>{ state.logo.ringC=e.target.value; renderPreview(); });
+  $("#logoGlowC").addEventListener("input",e=>{ state.logo.glowC=e.target.value; renderPreview(); });
+  $("#iconDir").addEventListener("input",e=>{ state.iconDir=e.target.value; renderPreview(); });
+  $("#iconMode").addEventListener("change",e=>{ state.iconMode=e.target.value; renderPreview(); });
+  $("#tintSvg").addEventListener("change",e=>{ state.tintSvg=e.target.checked; renderItems(); renderPreview(); });
+
+  // icon loading
+  const dz = $("#drop");
+  dz.addEventListener("click",()=>$("#iconFiles").click());
+  $("#pickIcons").addEventListener("click",()=>$("#iconFiles").click());
+  $("#iconFiles").addEventListener("change",e=>{ takeIcons(e.target.files); e.target.value=""; });
+  ["dragenter","dragover"].forEach(ev=>dz.addEventListener(ev,e=>{ e.preventDefault(); dz.classList.add("over"); }));
+  ["dragleave","drop"].forEach(ev=>dz.addEventListener(ev,e=>{ e.preventDefault(); dz.classList.remove("over"); }));
+  dz.addEventListener("drop",e=>{ takeIcons(e.dataTransfer.files); });
+  document.addEventListener("dragover",e=>e.preventDefault());
+  document.addEventListener("drop",e=>e.preventDefault());
+  $("#clearIcons").addEventListener("click",()=>{
+    if(!confirm("Remove every loaded logo and go back to the built-in symbols?")) return;
+    state.icons={}; renderItems(); renderPreview();
+  });
+
+  // links
+  $("#search").addEventListener("input",e=>{ search=e.target.value; renderItems(); });
+  $("#onlyOn").addEventListener("click",()=>{ onlyEnabled=!onlyEnabled; $("#onlyOn").style.borderColor=onlyEnabled?"var(--accent2)":""; renderItems(); });
+  $("#items").addEventListener("change",e=>{
+    const wrap=e.target.closest(".item"); if(!wrap) return;
+    const it=state.items[+wrap.dataset.i];
+    if(e.target.classList.contains("tog")){ it.on=e.target.checked; wrap.classList.toggle("on",it.on); renderPreview(); }
+    if(e.target.classList.contains("f") && e.target.type==="color"){ it.color=e.target.value; renderPreview(); }
+  });
+  $("#items").addEventListener("input",e=>{
+    const wrap=e.target.closest(".item"); if(!wrap) return;
+    const it=state.items[+wrap.dataset.i];
+    if(e.target.classList.contains("f") && e.target.type==="text"){
+      it[e.target.dataset.k]=e.target.value;
+      if(e.target.dataset.k==="handle") wrap.querySelector(".hd").textContent=e.target.value;
+      if(e.target.dataset.k==="name") wrap.querySelector(".nm").textContent=e.target.value;
+      renderPreview();
+    }
+  });
+  $("#items").addEventListener("click",e=>{
+    const wrap=e.target.closest(".item"); if(!wrap) return;
+    const i=+wrap.dataset.i, it=state.items[i];
+    if(e.target.classList.contains("exp")) wrap.classList.toggle("open");
+    if(e.target.dataset.act==="clearcol"){ it.color=""; renderItems(); renderPreview(); }
+    if(e.target.dataset.act==="del"){ state.items.splice(i,1); renderItems(); renderPreview(); }
+    if(e.target.dataset.act==="noicon"){ delete state.icons[iconKey(it)]; it.icon=""; renderItems(); renderPreview(); }
+    if(e.target.dataset.act==="up"){
+      const inp=$("#oneIcon"); inp.value="";
+      inp.onchange=()=>{ const f=inp.files[0]; if(!f) return;
+        readIcon(f, iconKey(it), ()=>{ renderItems(); renderPreview(); toast("Logo loaded"); }); };
+      inp.click();
+    }
+  });
+  $("#addCustom").addEventListener("click",()=>{
+    state.items.unshift({id:"custom:"+Date.now(),on:true,handle:"",label:"",url:"",icon:"",color:"#7c5cff",name:"My Link"});
+    renderItems(); renderPreview();
+  });
+  $("#clearAll").addEventListener("click",()=>{ state.items.forEach(i=>i.on=false); renderItems(); renderPreview(); });
+
+  // drag reorder
+  let dragI=null;
+  $("#items").addEventListener("dragstart",e=>{
+    const el=e.target.closest(".item"); if(!el) return;
+    dragI=+el.dataset.i; el.classList.add("drag"); e.dataTransfer.effectAllowed="move";
+  });
+  $("#items").addEventListener("dragover",e=>{ e.preventDefault(); });
+  $("#items").addEventListener("drop",e=>{
+    e.preventDefault();
+    const el=e.target.closest(".item"); if(!el||dragI===null) return;
+    const to=+el.dataset.i;
+    const [m]=state.items.splice(dragI,1);
+    state.items.splice(to,0,m);
+    dragI=null; renderItems(); renderPreview();
+  });
+  $("#items").addEventListener("dragend",()=>{ dragI=null; document.querySelectorAll(".item.drag").forEach(e=>e.classList.remove("drag")); });
+
+  // export
+  $("#dlHtml").addEventListener("click",()=>{ download("overlay.html", buildDoc(), "text/html"); toast("overlay.html downloaded"); });
+  $("#copyHtml").addEventListener("click",async()=>{
+    try{ await navigator.clipboard.writeText(buildDoc()); toast("HTML copied"); }
+    catch(e){ toast("Copy blocked — use Download"); }
+  });
+  $("#dlCfg").addEventListener("click",()=>{ download("overlay-preset.json", JSON.stringify(state,null,2), "application/json"); toast("Preset saved"); });
+  $("#loadCfg").addEventListener("click",()=>$("#cfgFile").click());
+  $("#cfgFile").addEventListener("change",e=>{
+    const f=e.target.files[0]; if(!f) return;
+    const r=new FileReader();
+    r.onload=()=>{ try{ state=JSON.parse(r.result); syncUI(); renderPals(); renderLooks(); renderItems(); renderPreview(); toast("Preset loaded"); }
+      catch(err){ toast("Bad preset file"); } };
+    r.readAsText(f);
+  });
+  $("#reset").addEventListener("click",()=>{
+    if(!confirm("Reset everything to defaults?")) return;
+    state=freshState(); localStorage.removeItem("ovcfg");
+    syncUI(); renderPals(); renderLooks(); renderItems(); renderPreview();
+  });
+
+  // preview backdrop
+  $("#checkerBtn").addEventListener("click",()=>{ const p=$("#pv"); p.className="checker"; p.style.background=""; });
+  $("#darkBtn").addEventListener("click",()=>{ const p=$("#pv"); p.className=""; p.style.background="#0d0d12"; });
+  $("#lightBtn").addEventListener("click",()=>{ const p=$("#pv"); p.className=""; p.style.background="#e9e9ee"; });
+
+  new ResizeObserver(()=>{
+    const r=$("#pv").getBoundingClientRect();
+    $("#dims").textContent = Math.round(r.width)+" × "+Math.round(r.height)+" px";
+  }).observe($("#pv"));
+}
+init();
+</script>
+</body>
+</html>
